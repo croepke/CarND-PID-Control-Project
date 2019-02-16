@@ -1,6 +1,8 @@
 #ifndef PID_H
 #define PID_H
 
+#include <vector>
+
 class PID {
  public:
   /**
@@ -31,6 +33,13 @@ class PID {
    */
   double TotalError();
 
+  void UpdateCteHistory(double cte);
+
+  std::vector<double> getCteHistory();
+
+  double calculateCteSum();
+  bool isCteHistoryEmpty();
+
  private:
   /**
    * PID Errors
@@ -41,10 +50,11 @@ class PID {
 
   /**
    * PID Coefficients
-   */ 
+   */
   double Kp;
   double Ki;
   double Kd;
+  std::vector<double> cte_hist;
 };
 
 #endif  // PID_H
