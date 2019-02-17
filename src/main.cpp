@@ -34,12 +34,18 @@ int main() {
   uWS::Hub h;
 
   PID pid;
+  int counter = 0;
+  int p_idx = 0;
+  double positive_optimization = true;
+  std::vector<double> p{ 0.1, 0.1, 0.1 };
+  std::vector<double> dp{ 0.1, 0.1, 0.1 };
+  double best_error = 10000000;
   /**
    * TODO: Initialize the pid variable.
    */
-  pid.Init(2.9331227688652457, 10.326589894591526, 0.49316041639454505);
+  pid.Init(p[0], p[1], p[2]);
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+  h.onMessage([&pid, &counter, &p_idx, &best_error, &positive_optimization, &p, &dp](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -64,11 +70,11 @@ int main() {
            * NOTE: Feel free to play around with the throttle and speed.
            *   Maybe use another PID controller to control the speed!
            */
-           pid.UpdateError(cte);
-           double total_error = pid.TotalError();
-           std::cout << total_error << std::endl;
-           steer_value = angle-total_error;
-
+          counter++;
+          pid.UpdateError(cte);
+          double total_error = pid.TotalError();
+          std::cout << total_error << std::endl;
+          steer_value = -total_error;
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value
                     << std::endl;
@@ -77,6 +83,48 @@ int main() {
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = 0.3;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
+          if (counter % 500 == 0) {
+            std::cout << "Counter " << counter << std::endl;
+          }
+          if (counter == 3000) {
+            double mean_error = pid.calculateCteMeanSquaredSum();
+            pid.clearCteHistory();
+            if (mean_error < best_error) {
+              best_error = mean_error;
+              dp[p_idx] *= 1.1;
+              counter = 0;
+              // Move index one further
+              if (p_idx % 2 == 0) {
+                p_idx = 0;
+              }
+              else {
+                p_idx += 1;
+              }
+            }
+            else if (positive_optimization) {
+              // try step into negative direction and reset counter
+              p[p_idx] -= 2*dp[p_idx];
+              counter = 0;
+              positive_optimization = false;
+            }
+            // I tried positive and negative optimization, both sucked
+            // reset to old situation and reduce step size
+            else {
+              p[p_idx] += dp[p_idx];
+              dp[p_idx] *= 0.9;
+              positive_optimization = true;
+              counter = 0;
+              if (p_idx % 2 == 0) {
+                p_idx = 0;
+              }
+              else {
+                p_idx += 1;
+              }
+            }
+            msg = "42[\"reset\",{}]";
+          }
+          pid.Update(p[0], p[1], p[2]);
+
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         }  // end "telemetry" if

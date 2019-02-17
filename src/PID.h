@@ -21,6 +21,8 @@ class PID {
    */
   void Init(double Kp_, double Ki_, double Kd_);
 
+  void Update(double Kp_, double Ki_, double Kd_);
+
   /**
    * Update the PID error variables given cross track error.
    * @param cte The current cross track error
@@ -38,7 +40,9 @@ class PID {
   std::vector<double> getCteHistory();
 
   double calculateCteSum();
+  double calculateCteMeanSquaredSum();
   bool isCteHistoryEmpty();
+  void clearCteHistory();
 
  private:
   /**

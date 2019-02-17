@@ -24,6 +24,12 @@ void PID::Init(double Kp_, double Ki_, double Kd_) {
    Kd = Kd_;
 }
 
+void PID::Update(double Kp_, double Ki_, double Kd_) {
+   Kp = Kp_;
+   Ki = Ki_;
+   Kd = Kd_;
+}
+
 void PID::UpdateError(double cte) {
   /**
    * TODO: Update PID errors based on cte.
@@ -63,6 +69,10 @@ vector<double> PID::getCteHistory() {
   return cte_hist;
 }
 
+void PID::clearCteHistory() {
+  cte_hist.clear();
+}
+
 bool PID::isCteHistoryEmpty() {
   return cte_hist.size() == 0;
 }
@@ -73,4 +83,12 @@ double PID::calculateCteSum() {
     sum += cte_hist[i];
   }
   return sum;
+}
+
+double PID::calculateCteMeanSquaredSum() {
+  double sum = 0.0;
+  for (int i=0; i<cte_hist.size(); ++i) {
+    sum += cte_hist[i]*cte_hist[i];
+  }
+  return sum/cte_hist.size();
 }
