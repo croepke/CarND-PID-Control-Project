@@ -35,13 +35,34 @@ class PID {
    */
   double TotalError();
 
+  /**
+   * Update the history of CTE values
+   * @param cte CTE value to be added
+   */
   void UpdateCteHistory(double cte);
-
+  /**
+   * Get CTE history
+   */
   std::vector<double> getCteHistory();
 
+  /**
+   * Calculate the total sum of CTE values
+   */
   double calculateCteSum();
+
+  /**
+   * Calculcate mean squared error for given CTE history
+   */
   double calculateCteMeanSquaredSum();
+
+  /**
+   * Check if CTE history is empty
+   */
   bool isCteHistoryEmpty();
+
+  /**
+   * Reset CTE history
+   */
   void clearCteHistory();
 
  private:
@@ -58,6 +79,10 @@ class PID {
   double Kp;
   double Ki;
   double Kd;
+
+  /**
+   * History of CTE values
+   */
   std::vector<double> cte_hist;
 };
 
